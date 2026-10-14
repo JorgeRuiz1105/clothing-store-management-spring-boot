@@ -54,6 +54,19 @@ public class ArticleController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Article> updateArticle(@PathVariable Long id, @RequestBody ArticleDTO request){
+        Article updatedArticle = articleService.updateArticle(
+                id,
+                request.name(),
+                request.size(),
+                request.color(),
+                request.price(),
+                request.category()
+        );
+        return ResponseEntity.ok(updatedArticle);
+    }
+
     @PatchMapping("/{id}/intake")
     public ResponseEntity<Void> inventoryIntake(@PathVariable Long id, @RequestBody Map<String, Integer> payload){
         int quantity = payload.get("quantity");
