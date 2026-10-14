@@ -40,7 +40,7 @@ The app is built under a multi-layer architecture featuring `controller`, `servi
 
 * Implement Spring Security.
 * Add request validations using Jakarta Bean Validation.
-* Improve DTOs to avoid exposing data.
+* Improve DTOs.
 * Add unit tests and integration tests.
 * API documentation.
 
