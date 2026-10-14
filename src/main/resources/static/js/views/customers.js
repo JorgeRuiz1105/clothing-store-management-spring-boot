@@ -78,6 +78,10 @@ export async function render(root) {
         h('td', {}, c.address || '-'),
         h('td', { class: 'actions-col' },
           h('div', { class: 'row-actions' },
+              h('button', {
+                class: 'icon-btn', type: 'button', 'aria-label': 'Editar cliente', title: 'Editar cliente',
+                onclick: () => openEdit(c),
+              }, icon('edit')),
             h('button', {
               class: 'icon-btn danger', type: 'button', 'aria-label': 'Eliminar cliente', title: 'Eliminar cliente',
               onclick: () => openDelete(c),
@@ -89,30 +93,57 @@ export async function render(root) {
   }
 
   function openCreate() {
+    openForm(null);
+  }
+
+  function openEdit(customer) {
+    openForm(customer);
+  }
+
+  function openForm(existing) {
+    const isEdit = existing !== null;
+
     const document_ = h('input', { class: 'input', type: 'text', required: true, maxlength: '20', autocomplete: 'off' });
     const name = h('input', { class: 'input', type: 'text', required: true, maxlength: '120', autocomplete: 'off' });
     const phone = h('input', { class: 'input', type: 'tel', maxlength: '20', autocomplete: 'off' });
     const address = h('input', { class: 'input', type: 'text', maxlength: '200', autocomplete: 'off' });
 
+    if (isEdit) {
+      document_.value = existing.document;
+      document_.disabled = true; // la cédula identifica al cliente y no se modifica
+      name.value = existing.name;
+      phone.value = existing.phone ?? '';
+      address.value = existing.address ?? '';
+    }
+
     modal({
-      title: 'Nuevo cliente',
-      confirmLabel: 'Guardar cliente',
+      title: isEdit ? 'Editar cliente' : 'Nuevo cliente',
+      confirmLabel: isEdit ? 'Guardar cambios' : 'Guardar cliente',
       body: h('div', { class: 'form-grid' },
-        field('Cédula', document_),
-        field('Teléfono', phone, 'Opcional'),
-        h('div', { class: 'full' }, field('Nombre completo', name)),
-        h('div', { class: 'full' }, field('Dirección', address, 'Opcional')),
+          field('Cédula', document_, isEdit ? 'No se puede modificar' : null),
+          field('Teléfono', phone, 'Opcional'),
+          h('div', { class: 'full' }, field('Nombre completo', name)),
+          h('div', { class: 'full' }, field('Dirección', address, 'Opcional')),
       ),
       onConfirm: async () => {
-        const saved = await customersApi.create({
-          document: document_.value.trim(),
+        const data = {
           name: name.value.trim(),
           phone: phone.value.trim() || null,
           address: address.value.trim() || null,
-        });
-        state.customers.push(saved);
-        paint();
-        toast(`Cliente "${saved.name}" registrado`, 'success');
+        };
+
+        if (isEdit) {
+          const updated = await customersApi.update(existing.id, data);
+          const i = state.customers.findIndex((c) => c.id === existing.id);
+          if (i >= 0) state.customers[i] = updated;
+          paint();
+          toast(`Cliente "${updated.name}" actualizado`, 'success');
+        } else {
+          const saved = await customersApi.create({ document: document_.value.trim(), ...data });
+          state.customers.push(saved);
+          paint();
+          toast(`Cliente "${saved.name}" registrado`, 'success');
+        }
       },
     });
   }

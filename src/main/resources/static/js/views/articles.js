@@ -105,6 +105,7 @@ export async function render(root) {
         h('td', { class: 'actions-col' },
           h('div', { class: 'row-actions' },
             actionButton('eye', 'Ver detalle', () => openDetail(a)),
+              actionButton('edit', 'Editar', () => openEdit(a)),
             actionButton('in', 'Registrar entrada', () => openMovement(a, 'intake')),
             actionButton('out', 'Registrar salida', () => openMovement(a, 'outflow')),
             actionButton('trash', 'Eliminar', () => openDelete(a), true),
@@ -114,46 +115,84 @@ export async function render(root) {
     );
   }
 
-  // ----- Crear -----
   function openCreate() {
+    openForm(null);
+  }
+
+  async function openEdit(article) {
+    try {
+      // Se relee el artículo para mostrar siempre los datos actuales.
+      openForm(await articlesApi.get(article.id));
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  function openForm(existing) {
+    const isEdit = existing !== null;
+
     const category = h('select', { class: 'input', required: true },
-      ...Object.entries(CATEGORIES).map(([key, c]) => h('option', { value: key }, c.label)),
+        ...Object.entries(CATEGORIES).map(([key, c]) => h('option', { value: key }, c.label)),
     );
     const size = h('select', { class: 'input', required: true });
     const fillSizes = () => {
       size.replaceChildren(...CATEGORIES[category.value].sizes.map((s) => h('option', { value: s }, s)));
     };
     category.addEventListener('change', fillSizes);
-    fillSizes();
 
     const name = h('input', { class: 'input', type: 'text', required: true, maxlength: '120', placeholder: 'Ej. Camisa de lino' });
     const color = h('input', { class: 'input', type: 'text', required: true, maxlength: '40', placeholder: 'Ej. Azul' });
     const price = h('input', { class: 'input', type: 'number', required: true, min: '0', step: 'any', inputmode: 'decimal' });
     const quantity = h('input', { class: 'input', type: 'number', required: true, min: '0', step: '1', value: '1', inputmode: 'numeric' });
 
+    if (isEdit) {
+      category.value = existing.category;
+      fillSizes();
+      size.value = existing.size;
+      name.value = existing.name;
+      color.value = existing.color;
+      price.value = existing.price;
+      quantity.value = existing.quantity;
+      quantity.disabled = true; // el stock se cambia con Entrada y Salida
+    } else {
+      fillSizes();
+    }
+
     modal({
-      title: 'Nuevo artículo',
-      confirmLabel: 'Guardar artículo',
+      title: isEdit ? 'Editar artículo' : 'Nuevo artículo',
+      confirmLabel: isEdit ? 'Guardar cambios' : 'Guardar artículo',
       body: h('div', { class: 'form-grid' },
-        h('div', { class: 'full' }, field('Nombre', name)),
-        field('Categoría', category),
-        field('Talla', size),
-        field('Color', color),
-        field('Precio', price),
-        h('div', { class: 'full' }, field('Cantidad inicial', quantity)),
+          h('div', { class: 'full' }, field('Nombre', name)),
+          field('Categoría', category),
+          field('Talla', size),
+          field('Color', color),
+          field('Precio', price),
+          h('div', { class: 'full' },
+              field(isEdit ? 'Cantidad en stock' : 'Cantidad inicial', quantity, isEdit ? 'Para cambiarla usa Entrada o Salida' : null),
+          ),
       ),
       onConfirm: async () => {
-        const saved = await articlesApi.create({
+        const data = {
           name: name.value.trim(),
           size: size.value,
           color: color.value.trim(),
           price: Number(price.value),
           quantity: Number.parseInt(quantity.value, 10),
           category: category.value,
-        });
-        state.articles.push(saved);
-        paint();
-        toast(`Artículo "${saved.name}" creado`, 'success');
+        };
+
+        if (isEdit) {
+          const updated = await articlesApi.update(existing.id, data);
+          const i = state.articles.findIndex((x) => x.id === existing.id);
+          if (i >= 0) state.articles[i] = updated;
+          paint();
+          toast(`Artículo "${updated.name}" actualizado`, 'success');
+        } else {
+          const saved = await articlesApi.create(data);
+          state.articles.push(saved);
+          paint();
+          toast(`Artículo "${saved.name}" creado`, 'success');
+        }
       },
     });
   }

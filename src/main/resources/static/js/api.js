@@ -52,7 +52,8 @@ export const articlesApi = {
   list: () => request('/articles'),
   get: (id) => request(`/articles/${id}`),
   create: (article) => request('/articles', { method: 'POST', body: article }),
-  remove: (id) => request(`/articles/${id}`, { method: 'DELETE' }), // requiere @DeleteMapping("/{id}")
+  remove: (id) => request(`/articles/${id}`, { method: 'DELETE' }),
+  update: (id, article) => request(`/articles/${id}`, { method: 'PUT', body: article }),
   intake: (id, quantity) => request(`/articles/${id}/intake`, { method: 'PATCH', body: { quantity } }),
   outflow: (id, quantity) => request(`/articles/${id}/outflow`, { method: 'PATCH', body: { quantity } }),
 };
@@ -65,6 +66,7 @@ export const customersApi = {
   create: (customer) => request('/customers', { method: 'POST', body: customer }),
   remove: (id) => request(`/customers/${id}`, { method: 'DELETE' }),
   removeByDocument: (document) => request(`/customers/document/${encodeURIComponent(document)}`, { method: 'DELETE' }),
+  update: (id, customer) => request(`/customers/${id}`, { method: 'PUT', body: customer }),
 };
 
 export const salesApi = {
