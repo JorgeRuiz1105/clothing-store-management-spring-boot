@@ -13,6 +13,8 @@ public interface CustomerService {
 
     List<Customer> getAllCustomers();
 
+    Customer updateCustomer(Long id, String name, String phone, String address);
+
     void deleteCustomerById(Long id);
 
     void deleteCustomerByDocument(String document);

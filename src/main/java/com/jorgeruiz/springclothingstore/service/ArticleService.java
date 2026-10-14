@@ -1,7 +1,9 @@
 package com.jorgeruiz.springclothingstore.service;
 
 import com.jorgeruiz.springclothingstore.model.Article;
+import com.jorgeruiz.springclothingstore.model.ArticleCategories;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface ArticleService {
@@ -10,6 +12,8 @@ public interface ArticleService {
     Article getArticleById(Long id);
 
     List<Article> getAllArticles();
+
+    Article updateArticle(Long id, String name, String size, String color, BigDecimal price, ArticleCategories category);
 
     void deleteArticleById(Long id);
 

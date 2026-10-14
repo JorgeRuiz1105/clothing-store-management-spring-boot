@@ -47,6 +47,14 @@ public class CustomerServiceImpl implements CustomerService{
 
     @Transactional
     @Override
+    public Customer updateCustomer(Long id, String name, String phone, String address) {
+        Customer existingCustomer = getCustomerById(id);
+        Customer updatedCustomer = new Customer(id, existingCustomer.getDocument(), name, phone, address);
+        return customerRepository.save(updatedCustomer);
+    }
+
+    @Transactional
+    @Override
     public void deleteCustomerById(Long id) {
         getCustomerById(id);
         customerRepository.deleteById(id);

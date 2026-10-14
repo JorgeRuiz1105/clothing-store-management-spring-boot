@@ -2,11 +2,13 @@ package com.jorgeruiz.springclothingstore.service;
 
 import com.jorgeruiz.springclothingstore.exception.EntityNotFoundException;
 import com.jorgeruiz.springclothingstore.model.Article;
+import com.jorgeruiz.springclothingstore.model.ArticleCategories;
 import com.jorgeruiz.springclothingstore.repository.ArticleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -37,6 +39,13 @@ public class ArticleServiceImpl implements ArticleService{
     @Override
     public List<Article> getAllArticles() {
         return articleRepository.findAll();
+    }
+
+    @Override
+    public Article updateArticle(Long id, String name, String size, String color, BigDecimal price, ArticleCategories category) {
+        Article existingArticle = getArticleById(id);
+        Article updatedArticle = new Article(id, name, size, color, price, existingArticle.getQuantity(), category);
+        return articleRepository.save(updatedArticle);
     }
 
     @Transactional
